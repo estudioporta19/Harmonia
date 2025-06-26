@@ -20,7 +20,7 @@ h1 {
   animation: glow 2s alternate infinite;
 }
 @keyframes glow { from{filter:drop-shadow(0 0 5px #0ff)}
-                  to{filter:drop-shadow(0 0 20px #f0f);} }
+                   to{filter:drop-shadow(0 0 20px #f0f);} }
 
 .grid { display:flex;flex-direction:column;align-items:center;gap:10px; margin-top:20px; }
 .hex-row { display:flex; gap:4px; }
@@ -58,7 +58,7 @@ input[type=file] { display:none; }
 </head>
 <body>
 <h1>⬢ HexaSynth FX ⬢</h1>
-<label class="upload-label" for="fileInput">🎧 Carregar Sample</label>
+<label class="upload-label" for="fileInput" id="uploadLabel">🎧 Carregar Sample</label>
 <input type="file" id="fileInput" accept="audio/*">
 
 <div class="controls">
@@ -90,6 +90,7 @@ let buffer = null;
 // Chain de efeitos
 let master = ctx.createGain();
 let convolver = ctx.createConvolver();
+let convolverGain = ctx.createGain(); // Adicionado para controle de volume do reverb
 let delay = ctx.createDelay();
 let delayFB = ctx.createGain();
 let filter = ctx.createBiquadFilter();
@@ -98,33 +99,54 @@ let dist = ctx.createWaveShaper();
 filter.type = 'lowpass'; filter.frequency.value = 10000;
 delay.delayTime.value = 0; delayFB.gain.value = 0;
 dist.curve = makeDistCurve(0);
+convolver.normalize = true; // Normalização do convolver definida uma vez
+convolverGain.gain.value = 0; // Começa com o reverb desligado
 
+// Conexões da cadeia de efeitos
 master.connect(convolver);
-master.connect(delay); delay.connect(delayFB); delayFB.connect(delay);
-master.connect(filter);
-convolver.connect(filter);
-delay.connect(filter);
+convolver.connect(convolverGain); // Conecta o convolver ao seu gain
+convolverGain.connect(filter);    // Conecta o gain do convolver ao filtro
+
+master.connect(delay);
+delay.connect(delayFB);
+delayFB.connect(delay);
+delay.connect(filter); // Delay também conecta ao filtro
+
+master.connect(filter); // Master também conecta diretamente ao filtro (para Dry signal)
+
 filter.connect(dist);
 dist.connect(ctx.destination);
-master.connect(ctx.destination);
+// Não conectar master diretamente a ctx.destination se todos os caminhos passarem pelos efeitos
+// Se quiser um sinal 'dry' misturado, mantenha: master.connect(ctx.destination);
+// Mas para o setup atual, todos os sinais passam pelo filtro antes da distorção e saída.
 
 // reverb IR simples
 fetch('https://webaudioapi.com/samples/audio-param/M1073.wav')
-  .then(r=>r.arrayBuffer()).then(b=>ctx.decodeAudioData(b))
-  .then(d=>convolver.buffer = d);
+  .then(r=>r.arrayBuffer())
+  .then(b=>ctx.decodeAudioData(b))
+  .then(d=>convolver.buffer = d)
+  .catch(e => console.error("Erro ao carregar o impulso do reverb:", e)); // Tratamento de erro
 
 // criar hexágonos
-const notes = ['C','D','E','G','A'];
+const notes = ['C','D','E','G','A']; // Notas para display
+const notesInScale = [0, 2, 4, 7, 9]; // Semitons para transposição (C, D, E, G, A)
+
 function createGrid(){
   let grid = document.getElementById('hexGrid');
-  let pattern=[4,5,4,5]; let idx=0;
-  pattern.forEach((count,row)=>{
+  const gridPattern = [
+    { count: 4, offset: false },
+    { count: 5, offset: true },
+    { count: 4, offset: false },
+    { count: 5, offset: true }
+  ];
+  let idx=0;
+  gridPattern.forEach((rowInfo, rowNum)=>{
     let rowDiv = document.createElement('div'); rowDiv.className='hex-row';
-    if(row%2) rowDiv.style.marginLeft='calc(var(--hex-size)/2)';
-    for(let i=0;i<count;i++){
+    if(rowInfo.offset) rowDiv.style.marginLeft='calc(var(--hex-size)/2)';
+    for(let i=0;i<rowInfo.count;i++){
       let h = document.createElement('div');
       h.className = 'hex'; h.dataset.idx = idx;
-      let n1 = notes[idx % 5], n2 = notes[(idx+3)%5];
+      let n1 = notes[idx % notes.length], n2 = notes[(idx+3)%notes.length];
       h.textContent = n1+'+'+n2;
       h.addEventListener('mousedown',()=>{
         playHex(idx); h.classList.add('active');
@@ -141,9 +163,27 @@ createGrid();
 
 // Carregar file
 document.getElementById('fileInput').onchange = async e=>{
-  let f = e.target.files[0];
-  let arr = await f.arrayBuffer();
-  buffer = await ctx.decodeAudioData(arr);
+    let f = e.target.files[0];
+    if (!f) return;
+
+    const uploadLabel = document.getElementById('uploadLabel');
+    uploadLabel.textContent = 'Carregando...';
+
+    try {
+        let arr = await f.arrayBuffer();
+        buffer = await ctx.decodeAudioData(arr);
+        uploadLabel.textContent = '✅ Sample Carregado!';
+        setTimeout(() => {
+            uploadLabel.textContent = '🎧 Carregar Sample';
+        }, 3000);
+    } catch (error) {
+        console.error("Erro ao decodificar o arquivo de áudio:", error);
+        uploadLabel.textContent = '❌ Erro ao Carregar!';
+        alert("Não foi possível carregar o arquivo de áudio. Por favor, tente outro formato.");
+        setTimeout(() => {
+            uploadLabel.textContent = '🎧 Carregar Sample';
+        }, 3000);
+    }
 };
 
 // calculo disto
@@ -160,10 +200,8 @@ function makeDistCurve(amount){
 
 // knobs listeners
 document.getElementById('reverbKnob').oninput = e=>{
-  convolver.normalize = true;
-  master.disconnect(); master.connect(convolver);
-  convolver.connect(filter);
-  if(e.target.value==0) master.disconnect(convolver);
+  // O valor do knob controla o ganho do convolver, misturando o reverb
+  convolverGain.gain.value = parseFloat(e.target.value);
 };
 document.getElementById('delayKnob').oninput = e=>{
   delay.delayTime.value = parseFloat(e.target.value);
@@ -179,20 +217,79 @@ document.getElementById('distKnob').oninput = e=>{
 // tocar notas
 function playHex(idx){
   if(!buffer) return;
-  let row = Math.floor(idx/ (idx<9?4:5));
-  let sems = [ notesToSem(idx%5) + row*12,
-               notesToSem((idx+3)%5) + (row+1)*12 ];
+
+  const baseMidiNote = 60; // Assumindo que seu sample é um C4 (MIDI 60). Ajuste conforme seu sample.
+
+  // Determinar a linha para o cálculo da oitava
+  let row = 0;
+  if (idx >= 4 && idx < 9) row = 1; // Linha 1 (índices 4-8)
+  else if (idx >= 9 && idx < 13) row = 2; // Linha 2 (índices 9-12)
+  else if (idx >= 13) row = 3; // Linha 3 (índices 13-17)
+
+  let noteIdx1 = idx % notesInScale.length;
+  let noteIdx2 = (idx + 3) % notesInScale.length; // Segunda nota, um intervalo fixo
+
+  let midiNote1 = baseMidiNote + (row * 12) + notesInScale[noteIdx1];
+  let midiNote2 = baseMidiNote + (row * 12) + notesInScale[noteIdx2];
+
+  let sems = [midiNote1, midiNote2];
+
   sems.forEach((s,i)=>{
     let src = ctx.createBufferSource();
     src.buffer = buffer;
-    src.playbackRate.value = Math.pow(2, (s-60)/12);
+    src.playbackRate.value = Math.pow(2, (s - baseMidiNote) / 12); // Transposição
     src.connect(master);
-    src.start(ctx.currentTime + i*0.03);
-    src.stop(ctx.currentTime + 2);
+    src.start(ctx.currentTime + i*0.03); // Pequeno atraso para a segunda nota
+    src.stop(ctx.currentTime + ctx.currentTime + 2); // Dura 2 segundos
   });
 }
 
-function notesToSem(i){return [0,2,4,7,9][i];}
+// Mapeamento de teclas QWERTY para índices dos hexágonos
+const keyToHexMap = {
+    'q': 0, 'w': 1, 'e': 2, 'r': 3, // Primeira linha (4 hexágonos)
+    'a': 4, 's': 5, 'd': 6, 'f': 7, 'g': 8, // Segunda linha (5 hexágonos)
+    'z': 9, 'x': 10, 'c': 11, 'v': 12, // Terceira linha (4 hexágonos)
+    'u': 13, 'i': 14, 'o': 15, 'p': 16, // Quarta linha (4 hexágonos, ajustado para 16)
+    // Se você tiver 5 hexágonos na última linha, adicione 'k': 17
+    'k': 17
+};
+
+// Armazenar o estado das teclas para evitar repetições indesejadas ao segurar
+const activeKeys = new Set();
+
+document.addEventListener('keydown', (event) => {
+    const key = event.key.toLowerCase();
+
+    // Evita acionar se o foco estiver num input (como os knobs)
+    if (event.target.tagName === 'INPUT') {
+        return;
+    }
+
+    if (keyToHexMap.hasOwnProperty(key) && !activeKeys.has(key)) {
+        const hexIdx = keyToHexMap[key];
+        const hexElement = document.querySelector(`.hex[data-idx="${hexIdx}"]`);
+
+        if (hexElement) {
+            playHex(hexIdx);
+            hexElement.classList.add('active');
+            activeKeys.add(key);
+        }
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    const key = event.key.toLowerCase();
+
+    if (keyToHexMap.hasOwnProperty(key) && activeKeys.has(key)) {
+        const hexIdx = keyToHexMap[key];
+        const hexElement = document.querySelector(`.hex[data-idx="${hexIdx}"]`);
+
+        if (hexElement) {
+            hexElement.classList.remove('active');
+            activeKeys.delete(key);
+        }
+    }
+});
 </script>
 </body>
 </html>
