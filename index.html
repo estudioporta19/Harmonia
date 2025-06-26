@@ -9,50 +9,131 @@
   --hex-size: 70px;
 }
 body {
-  background: radial-gradient(circle, #141428, #090918);
-  color: white; font-family: sans-serif;
+  /* Estilo do corpo com gradientes e cores Dalí-escas */
+  background: radial-gradient(circle at 50% 10%, #2a0050, #000000 70%),
+              radial-gradient(circle at 80% 90%, #50002a, #000000 70%),
+              linear-gradient(135deg, #000033, #330000);
+  background-blend-mode: screen, overlay, multiply;
+  color: white;
+  font-family: 'Georgia', serif; /* Fonte com mais personalidade */
   text-align: center; margin: 0; padding: 20px;
+  overflow: hidden;
 }
 h1 {
-  font-size: 2.5em;
-  background: linear-gradient(45deg,#0ff,#f0f);
-  -webkit-background-clip: text; color: transparent;
-  animation: glow 2s alternate infinite;
+  /* Título com brilho e gradiente vibrante */
+  font-size: 3em;
+  background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: glow 3s alternate infinite ease-in-out;
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.7), 0 0 30px rgba(255, 0, 255, 0.7);
+  letter-spacing: 2px;
 }
-@keyframes glow { from{filter:drop-shadow(0 0 5px #0ff)}
-                   to{filter:drop-shadow(0 0 20px #f0f);} }
+@keyframes glow {
+  from { filter: drop-shadow(0 0 8px #00ffff) drop-shadow(0 0 15px #ff00ff); }
+  to { filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 25px #ffff00); }
+}
 
 .grid { display:flex;flex-direction:column;align-items:center;gap:10px; margin-top:20px; }
 .hex-row { display:flex; gap:4px; }
 .hex {
+  /* Estilo dos hexágonos com gradiente, borda e transições aprimoradas */
   width:var(--hex-size); height:calc(var(--hex-size)*1.1547);
-  background:#222244; clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  background: linear-gradient(135deg, #330066, #660033);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer; position:relative;
-  box-shadow:0 0 5px #000;
-  transition:transform .2s,filter .2s, box-shadow .2s;
+  box-shadow:0 0 10px rgba(0,0,0,0.8);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  transition:transform .3s ease-out, filter .3s ease-out, box-shadow .3s ease-out, background .3s ease-out;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
 }
-.hex:hover { transform:scale(1.1); filter:brightness(1.5) saturate(1.5);
-             box-shadow: 0 0 20px #0ff; }
+.hex:hover {
+  /* Efeito de hover com rotação e brilho intenso */
+  transform:scale(1.15) rotate(5deg);
+  filter:brightness(1.8) saturate(2);
+  box-shadow: 0 0 30px #00ffff, 0 0 50px #ff00ff;
+  background: linear-gradient(135deg, #00ffff, #ff00ff);
+}
 .hex.active::before {
-  content:'';position:absolute;inset:-6px;
-  background:radial-gradient(circle,#0ff 20%,transparent 70%);
-  border-radius:15px;
-  animation:pulse 1s infinite;
+  /* Animação de pulsação mais proeminente */
+  content:'';position:absolute;inset:-8px;
+  background:radial-gradient(circle,#00ffff 20%,transparent 70%);
+  border-radius:20px;
+  animation:pulse 0.8s infinite alternate;
+  opacity: 0.7;
 }
 @keyframes pulse {
-  0%{opacity:0.2;}50%{opacity:0.5;}100%{opacity:0.2;}
+  0%{opacity:0.3; transform: scale(0.8);}
+  50%{opacity:0.6; transform: scale(1.1);}
+  100%{opacity:0.3; transform: scale(0.8);}
 }
-.controls { margin-top:20px; display:flex;justify-content:center;gap:15px; flex-wrap:wrap; }
-.knob-group { display:flex;flex-direction:column;align-items:center;color:#0ff; }
-.knob-group label { margin-bottom:5px; }
-.knob-group input { width:80px; }
+.controls {
+  /* Controles com fundo semi-transparente e sombra interna */
+  margin-top:40px;
+  display:flex;justify-content:center;gap:30px;
+  flex-wrap:wrap;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.2);
+}
+.knob-group {
+  color:#00ffff;
+  text-shadow: 0 0 5px #00ffff;
+  display:flex;flex-direction:column;align-items:center;
+}
+.knob-group label { margin-bottom:8px; font-size: 1.1em; }
+.knob-group input[type="range"] {
+  /* Estilo dos sliders (knobs) */
+  -webkit-appearance: none;
+  width: 100px;
+  height: 8px;
+  background: #333;
+  border-radius: 5px;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity .2s;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+.knob-group input[type="range"]:hover {
+  opacity: 1;
+}
+.knob-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(45deg, #00ffff, #ff00ff);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00ffff;
+}
+.knob-group input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(45deg, #00ffff, #ff00ff);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00ffff;
+}
 
-.upload-label { padding:10px 20px; background:linear-gradient(90deg,#0ff,#00f);
-  color:#000; border-radius:20px; cursor:pointer; margin-bottom:20px;
-  display:inline-block; transition:transform .2s;
+.upload-label {
+  /* Estilo do botão de upload com gradiente e sombra luminosa */
+  padding:12px 25px;
+  background:linear-gradient(90deg,#00ffff,#0000ff);
+  color:#000; border-radius:25px;
+  cursor:pointer; margin-bottom:25px;
+  display:inline-block; transition:transform .2s, box-shadow .2s;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 }
-.upload-label:hover { transform:scale(1.05); }
+.upload-label:hover {
+  transform:scale(1.08);
+  box-shadow: 0 0 25px #00ffff, 0 0 40px #0000ff;
+}
 input[type=file] { display:none; }
 </style>
 </head>
@@ -104,21 +185,18 @@ convolverGain.gain.value = 0; // Começa com o reverb desligado
 
 // Conexões da cadeia de efeitos
 master.connect(convolver);
-convolver.connect(convolverGain); // Conecta o convolver ao seu gain
-convolverGain.connect(filter);    // Conecta o gain do convolver ao filtro
+convolver.connect(convolverGain);
+convolverGain.connect(filter);
 
 master.connect(delay);
 delay.connect(delayFB);
 delayFB.connect(delay);
-delay.connect(filter); // Delay também conecta ao filtro
+delay.connect(filter);
 
-master.connect(filter); // Master também conecta diretamente ao filtro (para Dry signal)
+master.connect(filter); // Master também conecta diretamente ao filtro (para sinal dry)
 
 filter.connect(dist);
 dist.connect(ctx.destination);
-// Não conectar master diretamente a ctx.destination se todos os caminhos passarem pelos efeitos
-// Se quiser um sinal 'dry' misturado, mantenha: master.connect(ctx.destination);
-// Mas para o setup atual, todos os sinais passam pelo filtro antes da distorção e saída.
 
 // reverb IR simples
 fetch('https://webaudioapi.com/samples/audio-param/M1073.wav')
@@ -200,7 +278,6 @@ function makeDistCurve(amount){
 
 // knobs listeners
 document.getElementById('reverbKnob').oninput = e=>{
-  // O valor do knob controla o ganho do convolver, misturando o reverb
   convolverGain.gain.value = parseFloat(e.target.value);
 };
 document.getElementById('delayKnob').oninput = e=>{
@@ -222,12 +299,12 @@ function playHex(idx){
 
   // Determinar a linha para o cálculo da oitava
   let row = 0;
-  if (idx >= 4 && idx < 9) row = 1; // Linha 1 (índices 4-8)
-  else if (idx >= 9 && idx < 13) row = 2; // Linha 2 (índices 9-12)
-  else if (idx >= 13) row = 3; // Linha 3 (índices 13-17)
+  if (idx >= 4 && idx < 9) row = 1;
+  else if (idx >= 9 && idx < 13) row = 2;
+  else if (idx >= 13) row = 3;
 
   let noteIdx1 = idx % notesInScale.length;
-  let noteIdx2 = (idx + 3) % notesInScale.length; // Segunda nota, um intervalo fixo
+  let noteIdx2 = (idx + 3) % notesInScale.length;
 
   let midiNote1 = baseMidiNote + (row * 12) + notesInScale[noteIdx1];
   let midiNote2 = baseMidiNote + (row * 12) + notesInScale[noteIdx2];
@@ -240,17 +317,16 @@ function playHex(idx){
     src.playbackRate.value = Math.pow(2, (s - baseMidiNote) / 12); // Transposição
     src.connect(master);
     src.start(ctx.currentTime + i*0.03); // Pequeno atraso para a segunda nota
-    src.stop(ctx.currentTime + ctx.currentTime + 2); // Dura 2 segundos
+    src.stop(ctx.currentTime + 2); // Dura 2 segundos
   });
 }
 
 // Mapeamento de teclas QWERTY para índices dos hexágonos
 const keyToHexMap = {
-    'q': 0, 'w': 1, 'e': 2, 'r': 3, // Primeira linha (4 hexágonos)
-    'a': 4, 's': 5, 'd': 6, 'f': 7, 'g': 8, // Segunda linha (5 hexágonos)
-    'z': 9, 'x': 10, 'c': 11, 'v': 12, // Terceira linha (4 hexágonos)
-    'u': 13, 'i': 14, 'o': 15, 'p': 16, // Quarta linha (4 hexágonos, ajustado para 16)
-    // Se você tiver 5 hexágonos na última linha, adicione 'k': 17
+    'q': 0, 'w': 1, 'e': 2, 'r': 3,
+    'a': 4, 's': 5, 'd': 6, 'f': 7, 'g': 8,
+    'z': 9, 'x': 10, 'c': 11, 'v': 12,
+    'u': 13, 'i': 14, 'o': 15, 'p': 16,
     'k': 17
 };
 
