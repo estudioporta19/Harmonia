@@ -1,210 +1,198 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HexaSynth - Sampler Visual com Estilo</title>
-  <style>
-    :root {
-      --bg-color: #0a0a1a;
-      --hex-size: 70px;
-      --highlight: #0ff;
-      --shadow-glow: 0 0 20px rgba(0, 255, 255, 0.6);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexaSynth FX</title>
+<style>
+:root {
+  --hex-size: 70px;
+}
+body {
+  background: radial-gradient(circle, #141428, #090918);
+  color: white; font-family: sans-serif;
+  text-align: center; margin: 0; padding: 20px;
+}
+h1 {
+  font-size: 2.5em;
+  background: linear-gradient(45deg,#0ff,#f0f);
+  -webkit-background-clip: text; color: transparent;
+  animation: glow 2s alternate infinite;
+}
+@keyframes glow { from{filter:drop-shadow(0 0 5px #0ff)}
+                  to{filter:drop-shadow(0 0 20px #f0f);} }
 
-    body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at center, #141428 0%, #090918 100%);
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      overflow: hidden;
-    }
+.grid { display:flex;flex-direction:column;align-items:center;gap:10px; margin-top:20px; }
+.hex-row { display:flex; gap:4px; }
+.hex {
+  width:var(--hex-size); height:calc(var(--hex-size)*1.1547);
+  background:#222244; clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer; position:relative;
+  box-shadow:0 0 5px #000;
+  transition:transform .2s,filter .2s, box-shadow .2s;
+}
+.hex:hover { transform:scale(1.1); filter:brightness(1.5) saturate(1.5);
+             box-shadow: 0 0 20px #0ff; }
+.hex.active::before {
+  content:'';position:absolute;inset:-6px;
+  background:radial-gradient(circle,#0ff 20%,transparent 70%);
+  border-radius:15px;
+  animation:pulse 1s infinite;
+}
+@keyframes pulse {
+  0%{opacity:0.2;}50%{opacity:0.5;}100%{opacity:0.2;}
+}
+.controls { margin-top:20px; display:flex;justify-content:center;gap:15px; flex-wrap:wrap; }
+.knob-group { display:flex;flex-direction:column;align-items:center;color:#0ff; }
+.knob-group label { margin-bottom:5px; }
+.knob-group input { width:80px; }
 
-    h1 {
-      text-align: center;
-      font-size: 2.5em;
-      margin: 20px 0;
-      background: linear-gradient(45deg, #0ff, #f0f);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: glow 2s infinite alternate;
-    }
-
-    @keyframes glow {
-      from { filter: drop-shadow(0 0 5px #0ff); }
-      to { filter: drop-shadow(0 0 20px #f0f); }
-    }
-
-    .grid {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-top: 40px;
-    }
-
-    .hex-row {
-      display: flex;
-      gap: 4px;
-    }
-
-    .hex {
-      width: var(--hex-size);
-      height: calc(var(--hex-size) * 1.1547);
-      background: linear-gradient(145deg, #222244, #111122);
-      clip-path: polygon(
-        25% 0%, 75% 0%,
-        100% 50%, 75% 100%,
-        25% 100%, 0% 50%
-      );
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9em;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.2s, filter 0.2s;
-      box-shadow: 0 0 5px #000;
-      position: relative;
-    }
-
-    .hex:hover {
-      transform: scale(1.1);
-      filter: brightness(1.5) saturate(1.5);
-      box-shadow: var(--shadow-glow);
-    }
-
-    .hex.active::before {
-      content: '';
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 15px;
-      background: radial-gradient(circle, #0ff 10%, transparent 70%);
-      opacity: 0.3;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.2; }
-      50% { transform: scale(1.1); opacity: 0.5; }
-      100% { transform: scale(1); opacity: 0.2; }
-    }
-
-    .controls {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    .controls input[type="file"] {
-      display: none;
-    }
-
-    .upload-label {
-      display: inline-block;
-      padding: 12px 24px;
-      background: linear-gradient(90deg, #0ff, #00f0ff);
-      color: #000;
-      font-weight: bold;
-      border-radius: 25px;
-      cursor: pointer;
-      box-shadow: var(--shadow-glow);
-      transition: transform 0.2s;
-    }
-
-    .upload-label:hover {
-      transform: scale(1.05);
-    }
-  </style>
+.upload-label { padding:10px 20px; background:linear-gradient(90deg,#0ff,#00f);
+  color:#000; border-radius:20px; cursor:pointer; margin-bottom:20px;
+  display:inline-block; transition:transform .2s;
+}
+.upload-label:hover { transform:scale(1.05); }
+input[type=file] { display:none; }
+</style>
 </head>
 <body>
-  <h1>⬢ HexaSynth ⬢</h1>
-  <div class="controls">
-    <label for="fileInput" class="upload-label">🎧 Escolher Som</label>
-    <input type="file" id="fileInput" accept="audio/*">
+<h1>⬢ HexaSynth FX ⬢</h1>
+<label class="upload-label" for="fileInput">🎧 Carregar Sample</label>
+<input type="file" id="fileInput" accept="audio/*">
+
+<div class="controls">
+  <div class="knob-group">
+    <label for="reverbKnob">Reverb</label>
+    <input type="range" id="reverbKnob" min="0" max="1" step="0.01" value="0">
   </div>
+  <div class="knob-group">
+    <label for="delayKnob">Delay</label>
+    <input type="range" id="delayKnob" min="0" max="0.5" step="0.01" value="0">
+  </div>
+  <div class="knob-group">
+    <label for="filterKnob">Filtro LP</label>
+    <input type="range" id="filterKnob" min="500" max="10000" step="100" value="10000">
+  </div>
+  <div class="knob-group">
+    <label for="distKnob">Distorção</label>
+    <input type="range" id="distKnob" min="0" max="1000" step="10" value="0">
+  </div>
+</div>
 
-  <div class="grid" id="hexGrid"></div>
+<div class="grid" id="hexGrid"></div>
 
-  <script>
-    const notes = ['C', 'D', 'E', 'G', 'A'];
+<script>
+// Setup áudio
+let ctx = new (AudioContext||webkitAudioContext)();
+let buffer = null;
 
-    function createGrid() {
-      const grid = document.getElementById('hexGrid');
-      const pattern = [4, 5, 4, 5];
-      let index = 0;
+// Chain de efeitos
+let master = ctx.createGain();
+let convolver = ctx.createConvolver();
+let delay = ctx.createDelay();
+let delayFB = ctx.createGain();
+let filter = ctx.createBiquadFilter();
+let dist = ctx.createWaveShaper();
 
-      pattern.forEach((count, rowIdx) => {
-        const row = document.createElement('div');
-        row.className = 'hex-row';
-        if (rowIdx % 2 !== 0) row.style.marginLeft = 'calc(var(--hex-size) / 2)';
+filter.type = 'lowpass'; filter.frequency.value = 10000;
+delay.delayTime.value = 0; delayFB.gain.value = 0;
+dist.curve = makeDistCurve(0);
 
-        for (let i = 0; i < count; i++) {
-          const hex = document.createElement('div');
-          hex.className = 'hex';
-          hex.dataset.index = index;
+master.connect(convolver);
+master.connect(delay); delay.connect(delayFB); delayFB.connect(delay);
+master.connect(filter);
+convolver.connect(filter);
+delay.connect(filter);
+filter.connect(dist);
+dist.connect(ctx.destination);
+master.connect(ctx.destination);
 
-          const note1 = notes[index % notes.length];
-          const note2 = notes[(index + 3) % notes.length];
+// reverb IR simples
+fetch('https://webaudioapi.com/samples/audio-param/M1073.wav')
+  .then(r=>r.arrayBuffer()).then(b=>ctx.decodeAudioData(b))
+  .then(d=>convolver.buffer = d);
 
-          hex.textContent = `${note1} + ${note2}`;
-
-          hex.addEventListener('mousedown', () => {
-            playNote(index);
-            hex.classList.add('active');
-          });
-          hex.addEventListener('mouseup', () => hex.classList.remove('active'));
-          hex.addEventListener('mouseleave', () => hex.classList.remove('active'));
-
-          row.appendChild(hex);
-          index++;
-        }
-        grid.appendChild(row);
+// criar hexágonos
+const notes = ['C','D','E','G','A'];
+function createGrid(){
+  let grid = document.getElementById('hexGrid');
+  let pattern=[4,5,4,5]; let idx=0;
+  pattern.forEach((count,row)=>{
+    let rowDiv = document.createElement('div'); rowDiv.className='hex-row';
+    if(row%2) rowDiv.style.marginLeft='calc(var(--hex-size)/2)';
+    for(let i=0;i<count;i++){
+      let h = document.createElement('div');
+      h.className = 'hex'; h.dataset.idx = idx;
+      let n1 = notes[idx % 5], n2 = notes[(idx+3)%5];
+      h.textContent = n1+'+'+n2;
+      h.addEventListener('mousedown',()=>{
+        playHex(idx); h.classList.add('active');
       });
+      h.addEventListener('mouseup',()=>h.classList.remove('active'));
+      h.addEventListener('mouseleave',()=>h.classList.remove('active'));
+      rowDiv.appendChild(h);
+      idx++;
     }
+    grid.appendChild(rowDiv);
+  });
+}
+createGrid();
 
-    createGrid();
+// Carregar file
+document.getElementById('fileInput').onchange = async e=>{
+  let f = e.target.files[0];
+  let arr = await f.arrayBuffer();
+  buffer = await ctx.decodeAudioData(arr);
+};
 
-    let audioBuffer = null;
-    let context = new (window.AudioContext || window.webkitAudioContext)();
+// calculo disto
+function makeDistCurve(amount){
+  let k = typeof amount=='number'?amount:50;
+  let n=44100; let curve = new Float32Array(n);
+  let deg = Math.PI/180;
+  for(let i=0;i<n;i++){
+    let x = i*2/n -1;
+    curve[i] = (3+k)*x*20*deg/(Math.PI + k*Math.abs(x));
+  }
+  return curve;
+}
 
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+// knobs listeners
+document.getElementById('reverbKnob').oninput = e=>{
+  convolver.normalize = true;
+  master.disconnect(); master.connect(convolver);
+  convolver.connect(filter);
+  if(e.target.value==0) master.disconnect(convolver);
+};
+document.getElementById('delayKnob').oninput = e=>{
+  delay.delayTime.value = parseFloat(e.target.value);
+  delayFB.gain.value = parseFloat(e.target.value);
+};
+document.getElementById('filterKnob').oninput = e=>{
+  filter.frequency.value = parseFloat(e.target.value);
+};
+document.getElementById('distKnob').oninput = e=>{
+  dist.curve = makeDistCurve(parseFloat(e.target.value));
+};
 
-      const arrayBuffer = await file.arrayBuffer();
-      audioBuffer = await context.decodeAudioData(arrayBuffer);
-      console.log('Áudio carregado');
-    });
+// tocar notas
+function playHex(idx){
+  if(!buffer) return;
+  let row = Math.floor(idx/ (idx<9?4:5));
+  let sems = [ notesToSem(idx%5) + row*12,
+               notesToSem((idx+3)%5) + (row+1)*12 ];
+  sems.forEach((s,i)=>{
+    let src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.playbackRate.value = Math.pow(2, (s-60)/12);
+    src.connect(master);
+    src.start(ctx.currentTime + i*0.03);
+    src.stop(ctx.currentTime + 2);
+  });
+}
 
-    function playNote(index) {
-      if (!audioBuffer) return;
-
-      const semitones1 = notesToSemitones(index % notes.length) + 36;
-      const semitones2 = notesToSemitones((index + 3) % notes.length) + 48;
-
-      triggerSample(semitones1);
-      setTimeout(() => triggerSample(semitones2), 50);
-    }
-
-    function notesToSemitones(noteIndex) {
-      const scale = [0, 2, 4, 7, 9];
-      return scale[noteIndex];
-    }
-
-    function triggerSample(semitones) {
-      const source = context.createBufferSource();
-      source.buffer = audioBuffer;
-      const rate = Math.pow(2, (semitones - 60) / 12);
-      source.playbackRate.value = rate;
-
-      source.connect(context.destination);
-      source.start(0);
-      source.stop(context.currentTime + 2);
-    }
-  </script>
+function notesToSem(i){return [0,2,4,7,9][i];}
+</script>
 </body>
 </html>
